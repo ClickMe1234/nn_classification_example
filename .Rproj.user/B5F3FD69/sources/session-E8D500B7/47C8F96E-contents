@@ -1,0 +1,169 @@
+---
+title: "Classification examples"
+output: html_notebook
+---
+
+# Background
+
+
+# Setup libs and environment
+
+```{r}
+library(tidyverse)
+library(keras)
+library(brms)
+library(janitor)
+library(kableExtra)
+ggplot2::theme_set(theme_classic(base_size = 18))
+options(scipen = 999999)
+```
+
+# Titanic dataset
+
+Taken from https://www.kaggle.com/code/dmilla/introduction-to-decision-trees-titanic-dataset
+
+## Load the data
+
+```{r}
+titanic <- read_csv("input/titanic/titanic.csv") |>
+  clean_names()
+```
+
+## Data exploration
+
+### Show me what you got
+
+Each row shows a single passenger, if they survived, their class, name, sex, age, no. siblings, N. parents/childred, ticket number & fare cost.
+
+```{r}
+
+titanic |>
+  head() |>
+  kbl() |>
+  kable_classic()
+
+```
+
+## Data structure
+
+* Lots of missing age data.
+* Almost no cabin data.
+* One missing fare and one missing embarked.
+
+```{r, fig.width=5, fig.height=3, dpi = 300}
+return_dtype <- function(x) {
+  if(is.na(x)) {
+    return("NA")
+  }
+  return(typeof(x))
+}
+return_dtype_vector <- function(x) {
+  sapply(x, return_dtype)
+}
+
+titanic |>
+  mutate(across(.fns = return_dtype_vector)) |>
+  mutate(row_num = row_number()) |>
+  pivot_longer(cols = !row_num) |>
+  mutate(name = factor(name,
+                       levels = names(titanic),
+                       )) |>
+  ggplot(aes(x = name, y = row_num, fill = value)) +
+  geom_tile() +
+  scale_fill_viridis_d() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+## How many survived
+
+* More survived than died
+
+```{r}
+titanic |>
+  group_by(survived) |>
+  summarise(n = n()) |>
+  ggplot(aes(x = as.factor(survived), y = n)) +
+  geom_bar(stat = "identity")
+
+titanic |>
+  group_by(survived) |>
+  summarise(n = n()) |>
+  ungroup() |>
+  mutate(t = sum(n),
+         survived_percent = round(n/t*100, 2)
+         ) |>
+  select(survived, survived_percent) |>
+  kbl() |>
+  kable_classic()
+```
+
+## Gender distribution
+
+### Total
+
+* More males onboard
+
+```{r}
+titanic |>
+  group_by(sex) |>
+  summarise(n = n()) |>
+  ggplot(aes(x = sex, y = n)) +
+  geom_bar(stat = "identity")
+```
+
+### Survived
+
+* More males died
+* Higher & of males died
+
+```{r}
+titanic |>
+  group_by(sex, survived) |>
+  summarise(n = n()) |>
+  ggplot(aes(x = sex, y = n, fill = as.factor(survived))) +
+  geom_bar(stat = "identity", position = position_dodge(1))
+
+titanic |>
+  group_by(sex, survived) |>
+  summarise(n = n()) |>
+  ungroup() |>
+  group_by(sex) |>
+  mutate(t = sum(n)) |>
+  ungroup() |>
+  mutate(percent_died = n/t*100) |>
+  ggplot(aes(x = sex, y = percent_died, fill = as.factor(survived))) +
+  geom_bar(stat = "identity")
+
+```
+
+## Class distribution
+
+### Total
+### Survived
+
+## Numbers at age
+
+### Total
+### Survived
+
+## Nuber siblings
+
+### Total
+### Survived
+
+## Number parents
+
+### Total
+### Survived
+
+## Fare distribution
+
+### Total
+### Survived
+
+## Embarked
+
+### Total
+### Survived

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>body{background-color:white;}</style>
+<script src="lib/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="lib/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="lib/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="lib/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="lib/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="lib/kePrint-0.0.1/kePrint.js"></script>
+<link href="lib/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+</head>
+<body>
+<table class=" lightable-classic" style='font-family: "Arial Narrow", "Source Sans Pro", sans-serif; margin-left: auto; margin-right: auto;'>
+ <thead>
+  <tr>
+   <th style="text-align:right;"> passenger_id </th>
+   <th style="text-align:right;"> survived </th>
+   <th style="text-align:right;"> pclass </th>
+   <th style="text-align:left;"> name </th>
+   <th style="text-align:left;"> sex </th>
+   <th style="text-align:right;"> age </th>
+   <th style="text-align:right;"> sib_sp </th>
+   <th style="text-align:right;"> parch </th>
+   <th style="text-align:left;"> ticket </th>
+   <th style="text-align:right;"> fare </th>
+   <th style="text-align:left;"> cabin </th>
+   <th style="text-align:left;"> embarked </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:left;"> Braund, Mr. Owen Harris </td>
+   <td style="text-align:left;"> male </td>
+   <td style="text-align:right;"> 22 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:left;"> A/5 21171 </td>
+   <td style="text-align:right;"> 7.2500 </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> S </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:left;"> Cumings, Mrs. John Bradley (Florence Briggs Thayer) </td>
+   <td style="text-align:left;"> female </td>
+   <td style="text-align:right;"> 38 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:left;"> PC 17599 </td>
+   <td style="text-align:right;"> 71.2833 </td>
+   <td style="text-align:left;"> C85 </td>
+   <td style="text-align:left;"> C </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:left;"> Heikkinen, Miss. Laina </td>
+   <td style="text-align:left;"> female </td>
+   <td style="text-align:right;"> 26 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:left;"> STON/O2. 3101282 </td>
+   <td style="text-align:right;"> 7.9250 </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> S </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:left;"> Futrelle, Mrs. Jacques Heath (Lily May Peel) </td>
+   <td style="text-align:left;"> female </td>
+   <td style="text-align:right;"> 35 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:left;"> 113803 </td>
+   <td style="text-align:right;"> 53.1000 </td>
+   <td style="text-align:left;"> C123 </td>
+   <td style="text-align:left;"> S </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:left;"> Allen, Mr. William Henry </td>
+   <td style="text-align:left;"> male </td>
+   <td style="text-align:right;"> 35 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:left;"> 373450 </td>
+   <td style="text-align:right;"> 8.0500 </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> S </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:left;"> Moran, Mr. James </td>
+   <td style="text-align:left;"> male </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:left;"> 330877 </td>
+   <td style="text-align:right;"> 8.4583 </td>
+   <td style="text-align:left;"> NA </td>
+   <td style="text-align:left;"> Q </td>
+  </tr>
+</tbody>
+</table> <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [["$","$"]]}})</script><script async src="https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
