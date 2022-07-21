@@ -1,7 +1,0 @@
-"0","titanic |>
-  group_by(sex, survived) |>
-  summarise(n = n()) |>
-  ggplot(aes(x = sex, y = n, fill = as.factor(survived))) +
-  geom_bar(stat = ""identity"", position = position_dodge(1))
-"
-"2","`summarise()` has grouped output by 'sex'. You can override using the `.groups` argument."

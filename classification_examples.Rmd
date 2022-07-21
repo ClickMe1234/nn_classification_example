@@ -14,8 +14,12 @@ library(keras)
 library(brms)
 library(janitor)
 library(kableExtra)
+library(corrplot)
+library(caret)
+library(pscl)
 ggplot2::theme_set(theme_classic(base_size = 18))
 options(scipen = 999999)
+knitr::opts_chunk$set(fig.width = 5, fig.height = 3, dpi = 300)
 ```
 
 # Titanic dataset
@@ -50,7 +54,7 @@ titanic |>
 * Almost no cabin data.
 * One missing fare and one missing embarked.
 
-```{r, fig.width=5, fig.height=3, dpi = 300}
+```{r}
 return_dtype <- function(x) {
   if(is.na(x)) {
     return("NA")
@@ -128,37 +132,394 @@ titanic |>
 titanic |>
   group_by(sex, survived) |>
   summarise(n = n()) |>
-  ggplot(aes(x = sex, y = n, fill = as.factor(survived))) +
-  geom_bar(stat = "identity", position = position_dodge(1))
+  ungroup() |>
+  group_by(sex) |>
+  mutate(t = sum(n)) |>
+  ungroup() |>
+  mutate(percent_died = n/t*100) |>
+  ggplot(aes(x = sex, y = percent_died, fill = as.factor(survived))) +
+  geom_bar(stat = "identity")
 
 ```
 
 ## Class distribution
 
 ### Total
+
+* Equal class 1 & 2, more class 3
+
+```{r}
+titanic |>
+  group_by(pclass) |>
+  summarise(n = n()) |>
+  ggplot(aes(x = pclass, y = n)) +
+  geom_bar(stat = "identity")
+```
+
+
 ### Survived
+
+* As expected, higher class passengers have a higher % chance of survival
+
+```{r}
+titanic |>
+  group_by(pclass, survived) |>
+  summarise(n = n()) |>
+  ggplot(aes(x = pclass, y = n, fill = as.factor(survived))) +
+  geom_bar(stat = "identity", position = position_dodge(1))
+
+titanic |>
+  group_by(pclass, survived) |>
+  summarise(n = n()) |>
+  ungroup() |>
+  group_by(pclass) |>
+  mutate(t = sum(n)) |>
+  ungroup() |>
+  mutate(percent_died = n/t*100) |>
+  ggplot(aes(x = pclass, y = percent_died, fill = as.factor(survived))) +
+  geom_bar(stat = "identity")
+
+```
 
 ## Numbers at age
 
 ### Total
+
+* 263 missing ages, sad
+
+```{r}
+titanic |>
+  ggplot(aes(x = age)) +
+  geom_histogram(binwidth = 1)
+```
+
 ### Survived
 
-## Nuber siblings
+* Really interesting non-linear interaction with age here.
+* Probably too many to impute. Will have to decide based on model accuracy if we should include this or not.
+
+```{r}
+titanic |>
+  mutate(age = round(age, 0)) |>
+  group_by(age, survived) |>
+  summarise(n = n()) |>
+  ungroup() |>
+  group_by(age) |>
+  mutate(t = sum(n)) |>
+  ungroup() |>
+  mutate(percent_died = n/t*100) |>
+  filter(survived == 0) |>
+  ggplot(aes(x = age, y = percent_died)) +
+  geom_smooth(se = F) +
+  geom_smooth(se = F, method = "lm", colour = "red") +
+  geom_line()
+```
+
+
+## Number siblings/spouces
 
 ### Total
+
+* Not a lot in higher sibling counts
+
+```{r}
+titanic |>
+  ggplot(aes(x = sib_sp)) +
+  geom_histogram(binwidth = 1) +
+  scale_x_continuous(breaks = seq(0, 9, 1), labels = seq(0, 9, 1))
+```
+
+
 ### Survived
 
-## Number parents
+* Looks very good, but probably due to low samples in higher sibling counts
+* Limiting it to 2 siblings shows strong fit, but this could be correlated with other things. Lets see later on.
+
+```{r}
+titanic |>
+  # mutate(age = round(age, 0)) |>
+  group_by(sib_sp, survived) |>
+  summarise(n = n()) |>
+  ungroup() |>
+  group_by(sib_sp) |>
+  mutate(t = sum(n)) |>
+  ungroup() |>
+  mutate(percent_died = n/t*100) |>
+  filter(survived == 0) |>
+  ggplot(aes(x = sib_sp, y = percent_died)) +
+  geom_smooth(se = F) +
+  geom_smooth(se = F, method = "lm", colour = "red") +
+  geom_line()
+
+
+titanic |>
+  mutate(sib_sp = ifelse(sib_sp>=2, 2, sib_sp)) |>
+  group_by(sib_sp, survived) |>
+  summarise(n = n()) |>
+  ungroup() |>
+  group_by(sib_sp) |>
+  mutate(t = sum(n)) |>
+  ungroup() |>
+  mutate(percent_died = n/t*100) |>
+  filter(survived == 0) |>
+  ggplot(aes(x = sib_sp, y = percent_died)) +
+  geom_smooth(se = F) +
+  geom_smooth(se = F, method = "lm", colour = "red") +
+  geom_line()
+```
+
+
+## Number parents/children
 
 ### Total
+
+```{r}
+titanic |>
+  ggplot(aes(x = parch)) +
+  geom_histogram(binwidth = 1) +
+  scale_x_continuous(breaks = seq(0, 9, 1), labels = seq(0, 9, 1))
+```
+
 ### Survived
+
+* Same as siblings/spoices onboard, low sample sizes show good fit
+* Lets check for correlation with other things before incusion
+* Could be a good fit though
+
+```{r}
+titanic |>
+  # mutate(age = round(age, 0)) |>
+  group_by(parch, survived) |>
+  summarise(n = n()) |>
+  ungroup() |>
+  group_by(parch) |>
+  mutate(t = sum(n)) |>
+  ungroup() |>
+  mutate(percent_died = n/t*100) |>
+  filter(survived == 0) |>
+  ggplot(aes(x = parch, y = percent_died)) +
+  geom_smooth(se = F) +
+  geom_smooth(se = F, method = "lm", colour = "red") +
+  geom_line()
+
+titanic |>
+  mutate(parch = ifelse(parch>=2, 2, parch)) |>
+  group_by(parch, survived) |>
+  summarise(n = n()) |>
+  ungroup() |>
+  group_by(parch) |>
+  mutate(t = sum(n)) |>
+  ungroup() |>
+  mutate(percent_died = n/t*100) |>
+  filter(survived == 0) |>
+  ggplot(aes(x = parch, y = percent_died)) +
+  geom_smooth(se = F) +
+  geom_smooth(se = F, method = "lm", colour = "red") +
+  geom_line()
+```
+
 
 ## Fare distribution
 
 ### Total
+
+```{r}
+titanic |>
+  ggplot(aes(x = fare)) +
+  geom_histogram(binwidth = 25)
+```
+
 ### Survived
 
-## Embarked
+* Fare, as expected, shows a good relationship with % died
+* Capping at £100 will help with low sample sizes for larger fares
+* Will correlate with class, easier to use these continuous variables comapred to factors in models
 
-### Total
-### Survived
+```{r}
+titanic |>
+  mutate(fare = round(fare, 0)) |>
+  group_by(fare, survived) |>
+  summarise(n = n()) |>
+  ungroup() |>
+  group_by(fare) |>
+  mutate(t = sum(n)) |>
+  ungroup() |>
+  mutate(percent_died = n/t*100) |>
+  filter(survived == 0) |>
+  ggplot(aes(x = fare, y = percent_died)) +
+  geom_smooth(se = F) +
+  geom_smooth(se = F, method = "lm", colour = "red") +
+  geom_line()
+
+titanic |>
+  mutate(fare = round(fare, 0)) |>
+  mutate(fare = ifelse(fare>=100, 100, fare)) |>
+  group_by(fare, survived) |>
+  summarise(n = n()) |>
+  ungroup() |>
+  group_by(fare) |>
+  mutate(t = sum(n)) |>
+  ungroup() |>
+  mutate(percent_died = n/t*100) |>
+  filter(survived == 0) |>
+  ggplot(aes(x = fare, y = percent_died)) +
+  geom_smooth(se = F) +
+  geom_smooth(se = F, method = "lm", colour = "red") +
+  geom_line()
+```
+
+## Correlation plots
+
+```{r}
+
+
+cor_matrix <- titanic |>
+  filter(!is.na(fare)) |>
+  filter(!is.na(age)) |>
+  mutate(sex = ifelse(sex == "male", 1, 0)) |>
+  select(survived, pclass, sex, age, sib_sp, parch, fare) |>
+  cor()
+
+cor_matrix |>
+  round(2) |>
+  head() |>
+  kbl() |>
+  kable_classic()
+
+cor.mtest <- function(mat, ...) {
+    mat <- as.matrix(mat)
+    n <- ncol(mat)
+    p.mat<- matrix(NA, n, n)
+    diag(p.mat) <- 0
+    for (i in 1:(n - 1)) {
+        for (j in (i + 1):n) {
+            tmp <- cor.test(mat[, i], mat[, j], ...)
+            p.mat[i, j] <- p.mat[j, i] <- tmp$p.value
+        }
+    }
+  colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+  p.mat
+}
+# matrix of the p-value of the correlation
+p.mat <- titanic |>
+  filter(!is.na(fare)) |>
+  filter(!is.na(age)) |>
+  mutate(sex = ifelse(sex == "male", 1, 0)) |>
+  select(survived, pclass, sex, age, sib_sp, parch, fare) |>
+  cor.mtest()
+
+corrplot(cor_matrix, type="upper", order="hclust", 
+         p.mat = p.mat, sig.level = 0.01)
+```
+
+
+## Data exploration lessons learned
+
+* Inclusion of sex, fare & parch essential
+* Age has interesting non-liner, but lots of missing data so may be worth not including it
+* sib_sp may have some non-linear relationship
+
+# Build models
+
+## Test train split
+
+```{r}
+test_id <- createDataPartition(titanic$survived,
+                               p = 0.8,
+                               list = F)
+test <- titanic[-test_id,]
+train <- titanic[test_id,]
+```
+
+
+## Frequentist logistic regression
+
+### Build models
+
+```{r}
+freq_m1 <- glm(
+  survived ~
+    1,
+  data = train,
+  family = binomial()
+)
+
+summary(freq_m1)
+
+freq_m2 <- glm(
+  survived ~
+    sex,
+  data = train,
+  family = binomial()
+)
+
+summary(freq_m2)
+
+freq_m3 <- glm(
+  survived ~
+    sex +
+    fare,
+  data = train,
+  family = binomial()
+)
+
+summary(freq_m3)
+
+freq_m4 <- glm(
+  survived ~
+    sex +
+    fare +
+    parch,
+  data = train,
+  family = binomial()
+)
+
+summary(freq_m4)
+
+freq_m5 <- glm(
+  survived ~
+    sex +
+    fare +
+    parch +
+    age,
+  data = train,
+  family = binomial()
+)
+
+summary(freq_m5)
+
+freq_m6 <- glm(
+  survived ~
+    sex +
+    fare +
+    parch +
+    age +
+    sib_sp,
+  data = train,
+  family = binomial()
+)
+
+```
+
+### Accuracy
+
+```{r}
+
+test_accuracy <- function(model, test_data) {
+  
+  res <- predict(model, newdata = test_data, type = "response") |>
+    unname()
+  
+  test_data <- test_data |>
+    mutate(fitted = ifelse(res > 0.5, 1, 0)) |>
+    filter(!is.na(fitted))
+  
+  error <- mean(test_data$fitted != test_data$survived)
+  
+  return(1-error)
+  
+}
+
+```
+
+

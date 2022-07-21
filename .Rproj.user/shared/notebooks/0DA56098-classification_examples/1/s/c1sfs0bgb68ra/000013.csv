@@ -1,5 +1,0 @@
-"0","titanic |>"
-"0","  group_by(survived) |>"
-"0","  summarise(n = n()) |>"
-"0","  ggplot(aes(x = as.factor(survived), y = n)) +"
-"0","  geom_bar(stat = ""identity"")"
